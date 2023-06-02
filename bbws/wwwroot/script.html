@@ -1,0 +1,99 @@
+<!----------------------------- WORKING SHIT --------------------------------->
+<script language="javascript">
+	var a = parent.parent.parent.document.main_stack;
+
+	// a.change_value();//n,v    set
+	// a.redd();//(n)   get
+
+	// function set_request(adr,type,value){
+	//   console.log("\"" + String(adr) + ',' + String(type) + ',' + String(value) + "\"");
+	// 	 var req = new XMLHttpRequest;
+	// 	 req.responseType = "text";
+	// 	 req.open("POST","/set");
+
+	// 	 // Sending request
+	// 	 req.send("\"" + String(adr) + ',' + String(type) + ',' + String(value) + "\"");
+
+	// 	 req.onreadystatechange = function(){
+	// 		 // We got response
+	// 		 if (req.readyState == 4) {
+	// 			 // Checking response code
+	// 			 if (req.response != "OK")
+	// 				 document.getElementById(String(adr)).children[0].value = "ERROR";
+	// 		 }
+	// 	 };
+	//  }
+
+	//  function get_request(adr,type){
+	// 	  var req = new XMLHttpRequest;
+	// 	  req.responseType = "text";
+	// 	  req.open("POST","/get");
+
+	// 	  // Sending request
+	// 	  req.send("\"" + String(adr) + ',' + String(type) + "\"");
+
+
+
+	// 	  req.onreadystatechange = function(){
+	// 		  // We got response
+	// 		  if (req.readyState == 4) {
+	// 			  // Checking response code
+
+	// 				  const elements_id = document.getElementById("C"+adr);
+	// 				  console.log(elements_id);
+	// 				  if(elements_id.nodeName == "SELECT"){
+	// 					elements_id.options[elements_id.selectedIndex].value = req.response;
+	// 				  }
+	// 				  if(elements_id.nodeName == "INPUT"){
+	// 					elements_id.value = req.response;
+	// 				  }
+	// 			  else{
+	// 				  if(elements_id.nodeName == "SELECT"){
+	// 					elements_id.options[elements_id.selectedIndex].value = "ERROR";
+	// 				  }
+
+
+	// 				  if(elements_id.nodeName == "INPUT"){
+	// 					elements_id.value = "ERROR";
+	// 				  }
+
+	// 			  }
+	// 		  }
+	// 	  };
+	//   }
+
+	  for(var i = 0; i < 65535; i++){
+		try{
+		  var elements_name = document.getElementsByName("C"+i)[0];
+		  elements_name.id = "C"+i;
+
+		  // constanting out values
+		  const elements_id = document.getElementById("C"+i);
+		  const adr = i;
+		  if(elements_name.nodeName == "SELECT"){
+			elements_id.addEventListener("change",()=>{a.change_value(adr,elements_id.options[elements_id.selectedIndex].value)});
+			a.readd(adr).then( (res)=>{
+				console.log(elements_id);
+				console.log(adr);
+				console.log(res);
+				console.log(elements_id.options[elements_id.selectedIndex].value);
+				console.log(typeof(elements_id.options[elements_id.selectedIndex].value ));
+				elements_id.selectedIndex = res;
+			}
+
+			);
+
+		  }
+
+		  if(elements_name.nodeName == "INPUT"){
+			elements_id.addEventListener("change",()=>{a.change_value(adr,elements_id.value)});
+			a.readd(adr).then( (res)=>{
+				elements_id.value = res;
+			})
+		  }
+		}catch{
+		  continue;
+		}
+	  }
+
+  </script>

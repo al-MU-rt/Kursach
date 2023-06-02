@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+<body style="background-color:#696969">
+    
+
+    
+
+    
+
+
+
+    
+        <div class="registers_table"><h4 class="header" id="3"></h4>
+            <div class="register">
+                <h4 class="address">DEVICES</h4>
+
+                <select size="1" id="val1"  style="font-size: 10pt; background-color: #F4F4F4; color: #000000; font-weight: bold">
+
+                </select>
+
+            </div>
+
+        </div>
+         <input id="smetana" type="submit" value="ok">
+           
+ 
+
+    <script>
+
+        var stack_of_request=[];
+
+        var set_of_devise=[];
+
+
+
+
+        function revo(){
+            window.location.href="/"
+        }
+      
+        var knop=document.getElementById("test");
+        knop.addEventListener("click",revo);
+        
+
+    </script>
+
+
+
+    <script>
+
+        function set_request(elem,winston){
+            
+            window.location.href="open_config";
+            }
+        
+        
+            function get_COM (){
+                var req = new XMLHttpRequest;
+                req.responseType = "text";
+                req.open("POST","/get_devices");
+                req.send();
+              
+                req.onreadystatechange = function(){
+                    // We got response
+                    if (req.readyState == 4) {
+                        // Checking response code
+                            let A=[];
+                            A=String(req.response).split(",")
+                            for (i of A){
+                                if(!i){
+                                    A.pop(i);
+                                }
+                            }
+                            console.log(A);
+                        
+        
+        
+                            const dFrag = document.createDocumentFragment();
+        
+                            // Add li elements to the fragment:
+                            for (let x in A) {
+                            const li = document.createElement('option');
+                            li.textContent = A[x];
+                            dFrag.appendChild(li);
+                            }
+                            document.getElementById('val1').appendChild(dFrag);
+        
+                          }
+                          
+                        }
+        
+                
+        
+                 }
+        
+                
+            
+        
+            get_COM() ;
+        
+        
+        
+            var val1 = document.getElementById("val1");
+            var C = document.getElementById("C6");
+                
+            var butt=document.getElementById("smetana");
+        
+            butt.addEventListener("click",()=>{set_request(C,val1)})
+          
+            
+        </script>
+
+
+
+</body>
+</html>

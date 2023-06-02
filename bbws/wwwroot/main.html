@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"> 
+    <style>
+        .navbar {
+  overflow: hidden;
+  background-color: #333;
+  font-family: Arial;
+}
+
+/* Links inside the navbar */
+.navbar a {
+  float: left;
+  font-size: 16px;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+/* The dropdown container */
+.dropdown {
+  float: left;
+  overflow: hidden;
+}
+
+/* Dropdown button */
+.dropdown .dropbtn {
+  font-size: 16px;
+  border: none;
+  outline: none;
+  color: white;
+  padding: 14px 16px;
+  background-color: inherit;
+  font-family: inherit; /* Important for vertical align on mobile phones */
+  margin: 0; /* Important for vertical align on mobile phones */
+}
+
+/* Add a red background color to navbar links on hover */
+.navbar a:hover, .dropdown:hover .dropbtn {
+  background-color: red;
+}
+
+/* Dropdown content (hidden by default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  float: none;
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+
+
+/* Add a grey background color to dropdown links on hover */
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+    </style>
+
+
+</head>
+<body style="background-color:#696969">
+    
+
+    
+
+    <div class="navbar">
+        <div class="dropdown">
+            <button class="dropbtn"  id="com_port_settings" >Настройки COM-порта 
+                <i class="fa fa-caret-down"></i>
+            </button>
+        </div>
+        
+        <div class="dropdown">
+            <button class="dropbtn"  id="change_device" >Зміна приладу
+                <i class="fa fa-caret-down"></i>
+            </button>
+        </div>
+         
+        <div class="dropdown">
+                <button class="dropbtn" style="background-color: red;" id="save" >Зберегти конфігурацію в прилад
+                    <i class="fa fa-caret-down"></i>
+                </button>
+           
+
+        </div>
+        
+        <div class="dropdown">
+            <button class="dropbtn" id="download" >Завантажити готову конфігурацію
+                <i class="fa fa-caret-down"></i>
+            </button>
+        </div>
+
+        
+      </div>
+
+
+
+    
+
+
+  
+        <div class="registers_table" id="sss"><h4 class="header" id="3"></h4>
+            <div class="register">
+                
+
+            </div>
+
+        </div>
+         <!--<input id="smetana" type="submit" value="ok">-->
+           
+         <iframe id="frame"  src="open_config" style="width:1500px; height: 1000px;" ></iframe>
+
+
+    <!--<iframe  src="\" style="width:1500px; height: 1000px;" ></iframe>-->
+
+
+
+
+
+
+    <script>
+
+
+        
+
+        function arrayRemove(arr, value) { 
+    
+        return arr.filter(function(ele){ 
+            return ele != value; 
+        });
+    }
+
+    class Regisrer {
+        constructor(number,value,min,max,type) {
+
+            if(parseInt(value)>=parseInt(min) && parseInt(value)<=parseInt(max)){
+                this.number=Number(number);
+                this.type=type;
+                this.value=Number(value);
+                this.min=Number(min);
+                this.max=Number(max);
+                
+            }else{
+
+                alert("значення не входить в задані межі"+"    " + number +"     "+ value+"    "+min+" "+max+" ");
+            }
+        
+         }
+    }
+
+     class Stack_of_register{
+         
+
+       constructor() {
+
+            this.set=[];
+            this.list_of_reg=[];
+            this.list_changed=[];
+            this.read=[];
+            this.save_status=0;
+            this.list_of_castom_set=[];
+            this.save_allow=0;
+          
+         }
+         async load(){
+            await this.get_all_castom_sets();
+            await this.get_save_reg();            
+         }
+
+         async download_config(){
+            for ( var i in this.list_changed ){
+                console.log(this.list_changed[i])
+               this.makeSetRequest([this.list_changed[i].number,this.list_changed[i].type,this.list_changed[i].value])
+            }
+
+            if(this.save_allow!=0){
+                this.makeSetRequest([this.save_status,"int",1])
+            }
+
+            this.list_changed=[];
+         }
+         
+         
+         clean(){
+            this.set=[];
+            this.list_of_reg=[];
+            this.list_changed=[];
+            this.current_set=[];
+            this.save_status=0;
+            this.list_of_castom_set=[];
+         }
+
+        async readd(reg){
+            if(await this.read_value(reg).then((response)=>response) != "нема"){
+                return await this.read_value(reg).then((response)=>response)
+            } 
+
+            let a = await this.add_current_value(reg)
+
+           return await this.read_value(reg).then((response)=>response) ;
+
+         }
+      
+
+        async read_value(register){
+            if(this.read.find(element => element.number == register)){
+            return this.read.find(element => element.number == register).value
+            }
+            else{
+                return "нема"
+            }
+        }
+        ///////////////////////////////////////////////////////////////////////////////////
+        set_request(adr,type,value){
+	         console.log("\"" + String(adr) + ',' + String(type) + ',' + String(value) + "\"");
+		         var req = new XMLHttpRequest;
+		         req.responseType = "text";
+		         req.open("POST","/set");
+		 
+                // Sending request
+                req.send("\"" + String(adr) + ',' + String(type) + ',' + String(value) + "\"");
+            
+                req.onreadystatechange = function(){
+                    // We got response
+                    if (req.readyState == 4) {
+                        // Checking response code
+                        if (req.response != "OK")
+                            document.getElementById(String(adr)).children[0].value = "ERROR";
+                    }
+                };
+        }
+
+
+        async  makeSetRequest(data=[]) {
+                const response = await fetch("/set", {
+                method: 'POST', // *GET, POST, PUT, DELETE, etc.
+                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: 'same-origin', // include, *same-origin, omit
+                headers: {
+                'Content-Type': 'text'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                redirect: 'follow', // manual, *follow, error
+                referrerPolicy: 'no-referrer', // no-referrer, *client
+                body:'\"'+ data.join(",")+'\"' // body data type must match "Content-Type" header
+                })
+
+                const re = response.text()
+
+                return await re ; // parses JSON response into native JavaScript objects
+        }
+        ///////////////////////////////////////////////////////////////////////////////////
+
+        async  makeGetRequest(data=[]) {
+                const response = await fetch("/get", {
+                method: 'POST', // *GET, POST, PUT, DELETE, etc.
+                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: 'same-origin', // include, *same-origin, omit
+                headers: {
+                'Content-Type': 'text'
+                // 'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                redirect: 'follow', // manual, *follow, error
+                referrerPolicy: 'no-referrer', // no-referrer, *client
+                body: data.join(",") // body data type must match "Content-Type" header
+                })
+
+                const re = response.json()
+
+                return await re ; // parses JSON response into native JavaScript objects
+        }
+
+
+        async add_current_value(num_of_reg){
+                let set_r=this.set.find(element => element.number == num_of_reg)
+
+                
+
+                return await this.makeGetRequest([num_of_reg,set_r.type])
+                    .then((dat)=>{
+                        this.read.push(new Regisrer(set_r.number,dat,set_r.min,set_r.max,set_r.type));
+                       
+                        return dat
+            });
+        }
+
+        get_save_reg(){
+
+            var string;
+            var req = new XMLHttpRequest;
+            req.responseType = "text";
+            req.open("POST","/get_seve_reg");
+            req.send();
+            req.onload =() => {this.save_status=req.response;
+            if(req.response==0){
+               let x= document.getElementById("save");
+               x.textContent="Тільки ручне збереження з панелі прилада"
+            }
+            };
+            
+        }
+
+        async get_all_castom_sets(){
+
+            var sss;
+            var req = new XMLHttpRequest;
+            req.responseType = "text";
+            req.open("POST","/get_all_castom_set");
+            req.send();
+            let aa=this;
+
+            req.onload=() => {
+                
+               
+                
+                let  element = document.getElementById("load_castom_set")
+                 //element.textContent=req.response
+                 let str = req.response;
+                 let a = str.split(",")
+                 a=arrayRemove(a, "")
+
+                 this.list_of_castom_set = a;
+
+                 for (let i in a){
+
+                    let chil=document.createElement("a")
+
+                    let sss=String((a[i])).slice((a[i].search("_")+1));
+                    sss=String((sss)).slice((sss.search("_")+1));
+
+                    chil.textContent=sss;
+                    element.appendChild(chil);
+                    if(req.status==200){
+                     this.load_set()
+                    }
+                }    
+            }
+        }
+
+        load_set(name){
+            var string;
+            var req = new XMLHttpRequest;
+            req.responseType = "text";
+            req.open("POST","/get_defoult_set");
+            req.send(this.list_of_castom_set[0]);
+
+            req.onload =() => { this.add_regs_by_file(req.response) };
+
+           
+
+         }
+         tester(){
+            alert("asdasdasd")
+        }
+
+        
+
+         
+
+
+         load_config(name){
+         }
+
+
+         change_value(n,v){
+                let curr_reg=this.list_changed.find(element => element.number == n)
+                if(curr_reg){
+                    alert("є елем");
+                    
+                    let curr_reg= this.list_changed.find(element => element.number == n);
+                    if(curr_reg.value==v){
+                        return
+                    }else{
+                    let a =this.list_changed.findIndex(element => element.number == n) ;
+                    this.list_changed[a]=new Regisrer(curr_reg.number,v,curr_reg.min,curr_reg.max,curr_reg.type);
+                    }
+
+                }else{
+                    
+                    let set_reg=this.set.find(element => element.number == n)
+                    console.log(set_reg);
+                    let changed_reg=new Regisrer(set_reg.number,v,set_reg.min,set_reg.max,set_reg.type)
+                    this.list_changed.push(changed_reg)
+                }
+         }
+
+         save(){
+            if(this.save_allow==0){
+                this.save_allow=1;
+            }else{
+                this.save_allow=0;
+            }
+         }
+
+         add_reg(n,v,min_,max_,t){
+            this.set.push(new Regisrer(n,v,min_,max_,t)) ;
+            this.list_of_reg.push(n)
+         }
+         
+         add_regs_by_file(string){
+            let reg=string.split("\n")
+
+            for (let i in reg){
+                let re = reg[i].replaceAll(';', '#').replaceAll(',', '#').replaceAll('{', '#').replaceAll('}', '#').replaceAll('$', '#').split("#");
+                
+                re=arrayRemove(re, "")
+                re=arrayRemove(re, "\r")
+
+                console.log(re)
+
+                if(re.length == 4){
+                    this.add_reg(re[0],re[1],re[2],re[3],"int")
+                }else{
+                    this.add_reg(re[0],re[1],re[2],re[3],re[4])
+                }
+                        
+                    
+                
+            }
+
+            return reg
+
+         }
+
+         get list(){
+            return this.list_of_reg
+         }
+
+
+    }
+
+
+
+   
+
+   
+    document.main_stack=new Stack_of_register();
+    document.main_stack.load();
+
+   
+
+   
+   
+
+
+    function set_request(elem,winston){
+            
+            let p = document.createElement('iframe');
+            p.src="/open_config"
+            let v=document.getElementById("sss")
+            let aBlock = v.appendChild( p );
+            }
+
+
+
+
+        function com_setting(){
+            frame=document.getElementById("frame")
+
+            frame.src="COM-port_setting"
+            //window.location.href
+        }
+
+
+        function change_d(){
+            frame=document.getElementById("frame")
+
+            frame.src="change_device"
+            document.main_stack.clean();
+            //window.location.href
+        }
+
+
+        function down(){
+            document.main_stack.download_config()
+        }
+
+
+        function sav (){
+
+            if(document.main_stack.save_status==0){
+                return 0
+            }
+            document.main_stack.save();
+            if(document.main_stack.save_allow==1){
+              var rrr= document.getElementById("save")
+              rrr.style.backgroundColor="green" 
+            }else{
+                var rrr= document.getElementById("save")
+                rrr.style.backgroundColor="#ff0000" 
+            }
+        }
+
+
+      
+        var com_sett=document.getElementById("com_port_settings");
+        com_sett.addEventListener("click",com_setting);
+
+        var change_dev=document.getElementById("change_device");
+        change_device.addEventListener("click",change_d);
+
+        
+        var download_dev=document.getElementById("download");
+        download_dev.addEventListener("click",down);
+
+
+        var  save_dev=document.getElementById("save");
+        save_dev.addEventListener("click",sav);
+
+
+       
+    </script>
+
+
+
+
+</body>
+</html>
